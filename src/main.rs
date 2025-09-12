@@ -1,9 +1,12 @@
+mod app;
+
 use std::io;
 use std::io::stdout;
-use crossterm::event::{read, KeyCode};
 use crossterm::{ExecutableCommand};
 use crossterm::cursor::{Hide, Show};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+
+use app::App;
 
 fn main() -> io::Result<()> {
 
@@ -12,17 +15,8 @@ fn main() -> io::Result<()> {
         .execute(Hide)?;
     enable_raw_mode()?;
 
-    while let Ok(event) = read() {
-
-        let Some(event) = event.as_key_event() else {
-            continue;
-        };
-
-        if event.code == KeyCode::Char('q') {
-            break;
-        }
-
-    }
+    let mut app = App::new();
+    app.run()?;
 
     disable_raw_mode()?;
     stdout()
