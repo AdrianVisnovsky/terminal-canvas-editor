@@ -1,4 +1,5 @@
 mod app;
+mod renderer;
 
 use std::io;
 use std::io::stdout;
