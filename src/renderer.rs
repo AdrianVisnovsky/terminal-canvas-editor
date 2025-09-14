@@ -5,14 +5,24 @@ use crossterm::{cursor, terminal, ExecutableCommand};
 use crossterm::terminal::ClearType;
 use crate::app::App;
 
-pub fn render(app: &App) -> io::Result<()> {
+const TOP_LEFT_BORDER: char = '┌';
+const TOP_RIGHT_BORDER: char = '┐';
+const BOTTOM_LEFT_BORDER: char = '└';
+const BOTTOM_RIGHT_BORDER: char = '┘';
+const VERTICAL_BORDER: char = '│';
+const HORIZONTAL_BORDER: char = '─';
 
-    io::stdout()
-        .execute(terminal::Clear(ClearType::All))?;
+pub fn render(app: &App, needs_clear: bool) -> io::Result<()> {
+
+    if needs_clear {
+        io::stdout().execute(terminal::Clear(ClearType::All))?;
+    }
 
     render_header(app)?;
     render_canvas(app)?;
     render_status_bar(app)?;
+
+    io::stdout().execute(cursor::MoveTo(app.cursor_x, app.cursor_y))?;
 
     io::stdout().flush()?;
     Ok(())
@@ -20,9 +30,12 @@ pub fn render(app: &App) -> io::Result<()> {
 
 fn render_header(app: &App) -> io::Result<()> {
 
-    let (width, _) = terminal::size()?;
-    let fps_text = format!("FPS: {}", app.fps);
-    let x_position = width.saturating_sub(fps_text.len() as u16);
+    let fps_text = match app.fps {
+        Some(fps) => format!("FPS: {}", fps),
+        None => "FPS: --".to_string(),
+    };
+
+    let x_position = app.width.saturating_sub(fps_text.len() as u16);
 
     io::stdout()
         .execute(cursor::MoveTo(x_position, 0))?
@@ -37,10 +50,40 @@ fn render_header(app: &App) -> io::Result<()> {
 
 fn render_canvas(app: &App) -> io::Result<()> {
 
+    io::stdout().execute(cursor::MoveTo(0, 1))?;
+    print!("{}", TOP_LEFT_BORDER);
+    for _ in 1..app.width - 1 {
+        print!("{}", HORIZONTAL_BORDER);
+    }
+    print!("{}", TOP_RIGHT_BORDER);
+
+    for y in 2..app.height - 2 {
+        io::stdout().execute(cursor::MoveTo(0, y))?;
+        print!("{}", VERTICAL_BORDER);
+
+        io::stdout().execute(cursor::MoveTo(app.width-1, y))?;
+        print!("{}", VERTICAL_BORDER);
+    }
+
+    io::stdout().execute(cursor::MoveTo(0, app.height-2))?;
+    print!("{}", BOTTOM_LEFT_BORDER);
+    for _ in 1..app.width - 1 {
+        print!("{}", HORIZONTAL_BORDER);
+    }
+    print!("{}", BOTTOM_RIGHT_BORDER);
+
     Ok(())
 }
 
 fn render_status_bar(app: &App) -> io::Result<()> {
+
+    let fps_text = format!("[{},{}]", app.cursor_x, app.cursor_y);
+    let x_position = app.width.saturating_sub(fps_text.len() as u16);
+
+    io::stdout()
+        .execute(cursor::MoveTo(x_position, app.height - 1))?;
+
+    print!("{}", fps_text);
 
     Ok(())
 }
