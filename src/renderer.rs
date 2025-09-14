@@ -28,9 +28,9 @@ fn render_header(app: &App) -> io::Result<()> {
         .execute(cursor::MoveTo(x_position, 0))?
         .execute(SetForegroundColor(Color::Green))?;
 
-    print!("{}", fps_text);  // Actually print it!
+    print!("{}", fps_text);
 
-    io::stdout().execute(ResetColor)?;  // Reset color
+    io::stdout().execute(ResetColor)?;
 
     Ok(())
 }
