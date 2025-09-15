@@ -22,9 +22,6 @@ pub fn render(app: &App, needs_clear: bool) -> io::Result<()> {
     render_canvas(app, needs_clear)?;
     render_status_bar(app)?;
 
-    io::stdout()
-        .execute(cursor::MoveTo(app.cursor_x + 1, app.cursor_y + 2))?;
-
     io::stdout().flush()?;
     Ok(())
 }
@@ -50,6 +47,25 @@ fn render_header(app: &App) -> io::Result<()> {
 }
 
 fn render_canvas(app: &App, redraw_border: bool) -> io::Result<()> {
+
+    for y in 2..app.height {
+        let canvas_y = (y - 2) as usize;
+        if canvas_y < app.canvas.len() {
+            io::stdout().execute(cursor::MoveTo(1, y))?;
+
+            for (x, &ch) in app.canvas[canvas_y].iter().enumerate() {
+                if x == app.cursor_x as usize && canvas_y == app.cursor_y as usize {
+                    if app.cursor_visible {
+                        print!("█");
+                    } else {
+                        print!("{}", ch);
+                    }
+                } else {
+                    print!("{}", ch);
+                }
+            }
+        }
+    }
 
     if !redraw_border {
         return Ok(());
@@ -83,12 +99,13 @@ fn render_canvas(app: &App, redraw_border: bool) -> io::Result<()> {
 fn render_status_bar(app: &App) -> io::Result<()> {
 
     let fps_text = format!("[{},{}]", app.cursor_x, app.cursor_y);
-    let x_position = app.width.saturating_sub(fps_text.len() as u16);
+    let padded_text = format!("{:>10}", fps_text);
+    let x_position = app.width.saturating_sub(10);
 
     io::stdout()
         .execute(cursor::MoveTo(x_position, app.height - 1))?;
 
-    print!("{}", fps_text);
+    print!("{}", padded_text);
 
     Ok(())
 }

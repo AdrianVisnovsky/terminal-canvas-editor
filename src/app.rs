@@ -10,6 +10,9 @@ pub struct App {
     pub height: u16,
     pub cursor_x: u16,
     pub cursor_y: u16,
+    pub cursor_visible: bool,
+    pub cursor_blink_timer: Instant,
+    pub canvas: Vec<Vec<char>>,
     pub fps: Option<i32>
 }
 
@@ -21,6 +24,9 @@ impl App {
             height: 0,
             cursor_x: 0,
             cursor_y: 0,
+            cursor_visible: false,
+            cursor_blink_timer: Instant::now(),
+            canvas: Vec::new(),
             fps: None
         }
     }
@@ -36,15 +42,12 @@ impl App {
         while self.running {
             let frame_start = Instant::now();
 
-            let (new_width, new_height) = terminal::size()?;
-            if new_width != self.width || new_height != self.height {
-
-                self.width = new_width;
-                self.height = new_height;
-                self.clamp_cursor();
-
-                needs_clear = true;
+            if self.cursor_blink_timer.elapsed() > Duration::from_millis(500) {
+                self.cursor_visible = !self.cursor_visible;
+                self.cursor_blink_timer = Instant::now();
             }
+
+            needs_clear |= self.check_resize()?;
 
             while poll(Duration::ZERO)? {
                 let event = read()?;
@@ -94,5 +97,40 @@ impl App {
     fn clamp_cursor(&mut self) {
         self.cursor_x = self.cursor_x.min(self.width.saturating_sub(3));
         self.cursor_y = self.cursor_y.min(self.height.saturating_sub(5));
+    }
+
+    fn resize_canvas(&mut self, old_canvas: Vec<Vec<char>>) {
+        let canvas_width = self.width.saturating_sub(2);
+        let canvas_height = self.height.saturating_sub(4);
+
+        self.canvas = vec![vec![' '; canvas_width as usize]; canvas_height as usize];
+
+        for (y, row) in old_canvas.iter().enumerate() {
+            if y >= canvas_height as usize { break; }
+
+            for (x, &ch) in row.iter().enumerate() {
+                if x >= canvas_width as usize { break; }
+
+                self.canvas[y][x] = ch;
+            }
+        }
+    }
+
+    fn check_resize(&mut self) -> std::io::Result<bool> {
+        let (new_width, new_height) = terminal::size()?;
+
+        if new_width != self.width || new_height != self.height {
+            let old_canvas = std::mem::take(&mut self.canvas);
+
+            self.width = new_width;
+            self.height = new_height;
+
+            self.resize_canvas(old_canvas);
+            self.clamp_cursor();
+
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }
