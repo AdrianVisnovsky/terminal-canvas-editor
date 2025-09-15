@@ -38,8 +38,11 @@ impl App {
 
             let (new_width, new_height) = terminal::size()?;
             if new_width != self.width || new_height != self.height {
+
                 self.width = new_width;
                 self.height = new_height;
+                self.clamp_cursor();
+
                 needs_clear = true;
             }
 
@@ -75,14 +78,21 @@ impl App {
                     match code {
                         KeyCode::Char('q') => self.running = false,
                         KeyCode::Up => self.cursor_y = self.cursor_y.saturating_sub(1),
-                        KeyCode::Down => self.cursor_y += self.cursor_y.saturating_add(1).max(self.height - 2),
+                        KeyCode::Down => self.cursor_y = self.cursor_y.saturating_add(1),
                         KeyCode::Left => self.cursor_x = self.cursor_x.saturating_sub(1),
-                        KeyCode::Right => self.cursor_x += self.cursor_x.saturating_add(1).max(self.width - 2),
+                        KeyCode::Right => self.cursor_x = self.cursor_x.saturating_add(1),
                         _ => {}
                     }
                 }
             }
             _ => {}
         }
+
+        self.clamp_cursor();
+    }
+
+    fn clamp_cursor(&mut self) {
+        self.cursor_x = self.cursor_x.min(self.width.saturating_sub(3));
+        self.cursor_y = self.cursor_y.min(self.height.saturating_sub(5));
     }
 }

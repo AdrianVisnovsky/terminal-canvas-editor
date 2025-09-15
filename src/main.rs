@@ -20,8 +20,7 @@ fn main() -> io::Result<()> {
     app.run()?;
 
     disable_raw_mode()?;
-    stdout()
-        .execute(LeaveAlternateScreen)?;
+    stdout().execute(LeaveAlternateScreen)?;
 
     Ok(())
 }

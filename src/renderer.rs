@@ -19,10 +19,11 @@ pub fn render(app: &App, needs_clear: bool) -> io::Result<()> {
     }
 
     render_header(app)?;
-    render_canvas(app)?;
+    render_canvas(app, needs_clear)?;
     render_status_bar(app)?;
 
-    io::stdout().execute(cursor::MoveTo(app.cursor_x, app.cursor_y))?;
+    io::stdout()
+        .execute(cursor::MoveTo(app.cursor_x + 1, app.cursor_y + 2))?;
 
     io::stdout().flush()?;
     Ok(())
@@ -48,7 +49,11 @@ fn render_header(app: &App) -> io::Result<()> {
     Ok(())
 }
 
-fn render_canvas(app: &App) -> io::Result<()> {
+fn render_canvas(app: &App, redraw_border: bool) -> io::Result<()> {
+
+    if !redraw_border {
+        return Ok(());
+    }
 
     io::stdout().execute(cursor::MoveTo(0, 1))?;
     print!("{}", TOP_LEFT_BORDER);
