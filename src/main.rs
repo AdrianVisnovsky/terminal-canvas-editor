@@ -1,10 +1,11 @@
 mod app;
 mod renderer;
+mod canvas;
 
 use std::io;
 use std::io::stdout;
-use crossterm::{ExecutableCommand};
-use crossterm::cursor::{Hide, Show};
+use crossterm::{cursor, ExecutableCommand};
+use crossterm::cursor::{Hide};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 
 use app::App;
@@ -22,7 +23,7 @@ fn main() -> io::Result<()> {
     disable_raw_mode()?;
     stdout()
         .execute(LeaveAlternateScreen)?
-        .execute(Show)?;
+        .execute(cursor::Show)?;
 
     Ok(())
 }
