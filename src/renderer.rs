@@ -50,11 +50,11 @@ fn render_canvas(app: &App, redraw_border: bool) -> io::Result<()> {
 
     for y in 2..app.height {
         let canvas_y = (y - 2) as usize;
-        if canvas_y < app.canvas.len() {
+        if canvas_y < app.canvas.data.len() {
             io::stdout().execute(cursor::MoveTo(1, y))?;
 
-            for (x, &ch) in app.canvas[canvas_y].iter().enumerate() {
-                if x == app.cursor_x as usize && canvas_y == app.cursor_y as usize {
+            for (x, &ch) in app.canvas.data[canvas_y].iter().enumerate() {
+                if x == app.cursor.x as usize && canvas_y == app.cursor.y as usize {
                     if app.cursor_visible {
                         print!("█");
                     } else {
@@ -98,7 +98,7 @@ fn render_canvas(app: &App, redraw_border: bool) -> io::Result<()> {
 
 fn render_status_bar(app: &App) -> io::Result<()> {
 
-    let fps_text = format!("[{},{}]", app.cursor_x, app.cursor_y);
+    let fps_text = format!("[{},{}]", app.cursor.x, app.cursor.y);
     let padded_text = format!("{:>10}", fps_text);
     let x_position = app.width.saturating_sub(10);
 
