@@ -29,9 +29,9 @@ pub fn render(app: &App, needs_clear: bool) -> io::Result<()> {
 fn render_header(app: &App) -> io::Result<()> {
 
     let (pen_text, pen_color) = if app.cursor.pen_down {
-        ("PEN: DOWN", Color::Green)
+        (format!("PEN: DOWN [{}]", app.cursor.brush), Color::Green)
     } else {
-        ("PEN: UP", Color::Red)
+        (format!("PEN: UP   [{}]", app.cursor.brush), Color::Red)
     };
 
     io::stdout()
