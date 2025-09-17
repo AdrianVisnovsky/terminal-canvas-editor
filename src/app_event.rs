@@ -2,7 +2,9 @@ use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 pub enum AppEvent {
     Quit,
-    MoveCursor(Direction)
+    MoveCursor(Direction),
+    TogglePen,
+    ClearCanvas
 }
 
 pub enum Direction {
@@ -18,6 +20,8 @@ pub fn parse_event(event: Event) -> Option<AppEvent> {
 
             match code {
                 KeyCode::Char('q') => Some(AppEvent::Quit),
+                KeyCode::Char('c') => Some(AppEvent::ClearCanvas),
+                KeyCode::Char(' ') => Some(AppEvent::TogglePen),
                 KeyCode::Up => Some(AppEvent::MoveCursor(Direction::Up)),
                 KeyCode::Down => Some(AppEvent::MoveCursor(Direction::Down)),
                 KeyCode::Left => Some(AppEvent::MoveCursor(Direction::Left)),

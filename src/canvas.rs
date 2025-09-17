@@ -31,6 +31,18 @@ impl Canvas {
         }
     }
 
+    pub fn draw(&mut self, x_position: u16, y_position: u16, c: char) {
+        if x_position < self.width && y_position < self.height {
+            self.data[y_position as usize][x_position as usize] = c;
+        }
+    }
+
+    pub fn clear(&mut self) {
+        for row in &mut self.data {
+            row.fill(' ')
+        }
+    }
+
     fn calculate_dimensions(terminal_width: u16, terminal_height: u16) -> (u16, u16) {
         (
             terminal_width.saturating_sub(2),

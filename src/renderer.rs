@@ -28,6 +28,18 @@ pub fn render(app: &App, needs_clear: bool) -> io::Result<()> {
 
 fn render_header(app: &App) -> io::Result<()> {
 
+    let (pen_text, pen_color) = if app.cursor.pen_down {
+        ("PEN: DOWN", Color::Green)
+    } else {
+        ("PEN: UP", Color::Red)
+    };
+
+    io::stdout()
+        .execute(cursor::MoveTo(0, 0))?
+        .execute(SetForegroundColor(pen_color))?;
+
+    print!("{}", format!("{:<9}", pen_text));
+
     let fps_text = match app.fps {
         Some(fps) => format!("FPS: {}", fps),
         None => "FPS: --".to_string(),

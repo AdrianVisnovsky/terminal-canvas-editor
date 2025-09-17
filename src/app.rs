@@ -88,6 +88,18 @@ impl App {
             AppEvent::MoveCursor(direction) => {
                 self.cursor.move_direction(direction);
                 self.cursor.clamp_cursor(self.width, self.height);
+                if self.cursor.pen_down {
+                    self.canvas.draw(self.cursor.x, self.cursor.y, self.cursor.brush)
+                }
+            },
+            AppEvent::TogglePen => {
+                self.cursor.toggle_pen();
+                if self.cursor.pen_down {
+                    self.canvas.draw(self.cursor.x, self.cursor.y, self.cursor.brush)
+                }
+            },
+            AppEvent::ClearCanvas => {
+                self.canvas.clear();
             }
         }
     }

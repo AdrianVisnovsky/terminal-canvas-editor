@@ -3,6 +3,8 @@ use crate::app_event::Direction;
 pub struct Cursor {
     pub x: u16,
     pub y: u16,
+    pub pen_down: bool,
+    pub brush: char
 }
 
 impl Cursor {
@@ -10,6 +12,8 @@ impl Cursor {
         Self {
             x: 0,
             y: 0,
+            pen_down: false,
+            brush: '#',
         }
     }
 
@@ -25,6 +29,10 @@ impl Cursor {
             Direction::Left => self.move_left(),
             Direction::Right => self.move_right(),
         }
+    }
+    
+    pub fn toggle_pen(&mut self) {
+        self.pen_down = !self.pen_down;
     }
 
     fn move_up(&mut self) {
