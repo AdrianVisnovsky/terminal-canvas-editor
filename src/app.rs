@@ -1,34 +1,38 @@
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyEventKind};
-use crossterm::terminal;
+use crossterm::event::{poll, read, Event};
+use crossterm::{terminal};
+use crate::app_event;
+use crate::app_event::AppEvent;
+use crate::canvas::Canvas;
+use crate::cursor::Cursor;
 use crate::renderer::render;
 
 pub struct App {
     running: bool,
     pub width: u16,
     pub height: u16,
-    pub cursor_x: u16,
-    pub cursor_y: u16,
+    pub cursor: Cursor,
     pub cursor_visible: bool,
     pub cursor_blink_timer: Instant,
-    pub canvas: Vec<Vec<char>>,
+    pub canvas: Canvas,
     pub fps: Option<i32>
 }
 
 impl App {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> std::io::Result<Self> {
+        let (width, height) = terminal::size()?;
+
+        Ok(Self {
             running: false,
-            width: 0,
-            height: 0,
-            cursor_x: 0,
-            cursor_y: 0,
+            width,
+            height,
+            cursor: Cursor::new(),
             cursor_visible: false,
             cursor_blink_timer: Instant::now(),
-            canvas: Vec::new(),
+            canvas: Canvas::new(width, height),
             fps: None
-        }
+        })
     }
 
     pub fn run(&mut self) -> std::io::Result<()> {
@@ -75,59 +79,41 @@ impl App {
     }
 
     fn handle_event(&mut self, event: Event) {
-        match event {
-            Event::Key(KeyEvent { code, kind, ..}) => {
-                if kind == KeyEventKind::Press {
-                    match code {
-                        KeyCode::Char('q') => self.running = false,
-                        KeyCode::Up => self.cursor_y = self.cursor_y.saturating_sub(1),
-                        KeyCode::Down => self.cursor_y = self.cursor_y.saturating_add(1),
-                        KeyCode::Left => self.cursor_x = self.cursor_x.saturating_sub(1),
-                        KeyCode::Right => self.cursor_x = self.cursor_x.saturating_add(1),
-                        _ => {}
-                    }
+        let Some(app_event) = app_event::parse_event(event) else {
+            return;
+        };
+
+        match app_event {
+            AppEvent::Quit => self.running = false,
+            AppEvent::MoveCursor(direction) => {
+                self.cursor.move_direction(direction);
+                self.cursor.clamp_cursor(self.width, self.height);
+                if self.cursor.pen_down {
+                    self.canvas.draw(self.cursor.x, self.cursor.y, self.cursor.brush)
                 }
-            }
-            _ => {}
-        }
-
-        self.clamp_cursor();
-    }
-
-    fn clamp_cursor(&mut self) {
-        self.cursor_x = self.cursor_x.min(self.width.saturating_sub(3));
-        self.cursor_y = self.cursor_y.min(self.height.saturating_sub(5));
-    }
-
-    fn resize_canvas(&mut self, old_canvas: Vec<Vec<char>>) {
-        let canvas_width = self.width.saturating_sub(2);
-        let canvas_height = self.height.saturating_sub(4);
-
-        self.canvas = vec![vec![' '; canvas_width as usize]; canvas_height as usize];
-
-        for (y, row) in old_canvas.iter().enumerate() {
-            if y >= canvas_height as usize { break; }
-
-            for (x, &ch) in row.iter().enumerate() {
-                if x >= canvas_width as usize { break; }
-
-                self.canvas[y][x] = ch;
+            },
+            AppEvent::TogglePen => {
+                self.cursor.toggle_pen();
+                if self.cursor.pen_down {
+                    self.canvas.draw(self.cursor.x, self.cursor.y, self.cursor.brush)
+                }
+            },
+            AppEvent::ClearCanvas => {
+                self.canvas.clear();
+            },
+            AppEvent::SetBrush(brush) => {
+                self.cursor.brush = brush;
             }
         }
     }
 
     fn check_resize(&mut self) -> std::io::Result<bool> {
         let (new_width, new_height) = terminal::size()?;
-
         if new_width != self.width || new_height != self.height {
-            let old_canvas = std::mem::take(&mut self.canvas);
-
             self.width = new_width;
             self.height = new_height;
-
-            self.resize_canvas(old_canvas);
-            self.clamp_cursor();
-
+            self.canvas.resize(new_width, new_height);
+            self.cursor.clamp_cursor(self.width, self.height);
             Ok(true)
         } else {
             Ok(false)

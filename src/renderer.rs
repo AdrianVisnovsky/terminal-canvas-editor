@@ -20,13 +20,25 @@ pub fn render(app: &App, needs_clear: bool) -> io::Result<()> {
 
     render_header(app)?;
     render_canvas(app, needs_clear)?;
-    render_status_bar(app)?;
+    render_status_bar(app, needs_clear)?;
 
     io::stdout().flush()?;
     Ok(())
 }
 
 fn render_header(app: &App) -> io::Result<()> {
+
+    let (pen_text, pen_color) = if app.cursor.pen_down {
+        (format!("PEN: DOWN [{}]", app.cursor.brush), Color::Green)
+    } else {
+        (format!("PEN: UP   [{}]", app.cursor.brush), Color::Red)
+    };
+
+    io::stdout()
+        .execute(cursor::MoveTo(0, 0))?
+        .execute(SetForegroundColor(pen_color))?;
+
+    print!("{}", format!("{:<9}", pen_text));
 
     let fps_text = match app.fps {
         Some(fps) => format!("FPS: {}", fps),
@@ -50,11 +62,11 @@ fn render_canvas(app: &App, redraw_border: bool) -> io::Result<()> {
 
     for y in 2..app.height {
         let canvas_y = (y - 2) as usize;
-        if canvas_y < app.canvas.len() {
+        if canvas_y < app.canvas.data.len() {
             io::stdout().execute(cursor::MoveTo(1, y))?;
 
-            for (x, &ch) in app.canvas[canvas_y].iter().enumerate() {
-                if x == app.cursor_x as usize && canvas_y == app.cursor_y as usize {
+            for (x, &ch) in app.canvas.data[canvas_y].iter().enumerate() {
+                if x == app.cursor.x as usize && canvas_y == app.cursor.y as usize {
                     if app.cursor_visible {
                         print!("█");
                     } else {
@@ -96,9 +108,18 @@ fn render_canvas(app: &App, redraw_border: bool) -> io::Result<()> {
     Ok(())
 }
 
-fn render_status_bar(app: &App) -> io::Result<()> {
+fn render_status_bar(app: &App, redraw_key_hints: bool) -> io::Result<()> {
 
-    let fps_text = format!("[{},{}]", app.cursor_x, app.cursor_y);
+    if redraw_key_hints {
+        io::stdout().execute(cursor::MoveTo(0, app.height - 1))?;
+
+        print!("Brushes: ");
+        for (i, &brush) in crate::cursor::BRUSHES.iter().enumerate() {
+            print!("[{}]:{} ", i + 1, brush);
+        }
+    }
+
+    let fps_text = format!("[{},{}]", app.cursor.x, app.cursor.y);
     let padded_text = format!("{:>10}", fps_text);
     let x_position = app.width.saturating_sub(10);
 
