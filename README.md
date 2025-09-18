@@ -28,3 +28,7 @@ cd terminal-canvas
 cargo build --release
 # executable located at .\target\release\terminal-canvas-editor
 ```
+
+## Dependencies
+
+- crossterm
