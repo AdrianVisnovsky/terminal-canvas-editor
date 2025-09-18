@@ -18,6 +18,7 @@ A terminal-based drawing application written in Rust, created as a learning proj
 - **c**: clear canvas
 - **1-9**: select brush
 - **spacebar**: toggle pen mode (up / down)
+- **arrow keys**: move around canvas
 
 ## How to run
 
