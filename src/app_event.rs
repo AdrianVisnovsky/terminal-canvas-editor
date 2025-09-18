@@ -4,7 +4,8 @@ pub enum AppEvent {
     Quit,
     MoveCursor(Direction),
     TogglePen,
-    ClearCanvas
+    ClearCanvas,
+    SetBrush(char)
 }
 
 pub enum Direction {
@@ -26,6 +27,10 @@ pub fn parse_event(event: Event) -> Option<AppEvent> {
                 KeyCode::Down => Some(AppEvent::MoveCursor(Direction::Down)),
                 KeyCode::Left => Some(AppEvent::MoveCursor(Direction::Left)),
                 KeyCode::Right => Some(AppEvent::MoveCursor(Direction::Right)),
+                KeyCode::Char(c) if c.is_ascii_digit() && c != '0' => {
+                    let index = (c as usize) - ('1' as usize);
+                    Some(AppEvent::SetBrush(crate::cursor::BRUSHES[index]))
+                },
                 _ => None
             }
         }

@@ -100,6 +100,9 @@ impl App {
             },
             AppEvent::ClearCanvas => {
                 self.canvas.clear();
+            },
+            AppEvent::SetBrush(brush) => {
+                self.cursor.brush = brush;
             }
         }
     }

@@ -1,5 +1,7 @@
 use crate::app_event::Direction;
 
+pub const BRUSHES: [char; 9] = ['*', '#', '@', '█', '▓', '░', '+', '■', '●'];
+
 pub struct Cursor {
     pub x: u16,
     pub y: u16,
@@ -13,7 +15,7 @@ impl Cursor {
             x: 0,
             y: 0,
             pen_down: false,
-            brush: '#',
+            brush: BRUSHES[0],
         }
     }
 
